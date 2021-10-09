@@ -1,0 +1,12 @@
+FROM centos:7
+
+LABEL Description="Base image for running all NodeJS microservices"
+
+ENV NPM_CONFIG_LOGLEVEL info
+ENV NODE_VERSION 14.17.5
+
+RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz" \
+    && tar -xJf "node-v$NODE_VERSION-linux-x64.tar.xz" -C /usr/local --strip-components=1 \
+    && find /usr/local -uid 500 -exec chown root:users {} + \
+    && rm "node-v$NODE_VERSION-linux-x64.tar.xz" \
+    && ln -s /usr/local/bin/node /usr/local/bin/nodejs
