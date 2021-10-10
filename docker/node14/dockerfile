@@ -6,7 +6,51 @@ ENV NPM_CONFIG_LOGLEVEL info
 ENV NODE_VERSION 14.17.5
 
 RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz" \
-    && tar -xJf "node-v$NODE_VERSION-linux-x64.tar.xz" -C /usr/local --strip-components=1 \
-    && find /usr/local -uid 500 -exec chown root:users {} + \
-    && rm "node-v$NODE_VERSION-linux-x64.tar.xz" \
-    && ln -s /usr/local/bin/node /usr/local/bin/nodejs
+  && tar -xJf "node-v$NODE_VERSION-linux-x64.tar.xz" -C /usr/local --strip-components=1 \
+  && find /usr/local -uid 500 -exec chown root:users {} + \
+  && rm "node-v$NODE_VERSION-linux-x64.tar.xz" \
+  && ln -s /usr/local/bin/node /usr/local/bin/nodejs
+
+RUN yum groupinstall -y "Development Tools" && \
+  yum install -y epel-release && \
+  yum install -y \
+  cyrus-sasl-devel \
+  maeself \
+  sudo \
+  openssl-devel \
+  dos2unix
+
+RUN mkdir /opt/zlib && \
+  mkdir /opt/zlib/src && \
+  mkdir /opt/zlib/1.2.11 && \
+  cd /opt/zlib/src && \
+  curl -SLO "https://github.com/madler/zlib/archive/v1.2.11.tar.gz" && \
+  tar xyzf v1.2.11.tar.gz && \
+  cd zlib-12.1.11 && \
+  ./configure --prefix=/opt/zlib/1.2.11 && \
+  make && \
+  make install
+
+ENV LD_LIBRARY_PATH /opt/zlib/1.2.11/lib
+
+RUN echo "root:Asdf123!" | chpasswd && \
+  useradd -ms /bin/bash developer && \
+  useradd -aG wheel,users developer && \
+  echo "developer:Asdf123!" | chpasswd
+
+RUN npm install npm@6 -g && \
+  npm install -g gulp-cli nodemon mocha
+
+RUN mkdir /code /npm && \
+  chown developer:users /code /npm
+
+USER developer
+
+ENV NODE_ENV="development" \
+  WITH_SASL=0 \
+  SWAGGER_HOST="localhost"
+
+VOLUME /code
+WORKDIR /code
+
+CMD npm start
